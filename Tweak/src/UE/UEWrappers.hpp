@@ -44,7 +44,7 @@ public:
     inline bool IsValid() const { return Data != nullptr; }
     inline bool IsValidIndex(int i) const { return i >= 0 && i < NumElements; }
 
-    inline int Slack() const { return NumElements - MaxElements; }
+    inline int Slack() const { return MaxElements - NumElements; }
 
     inline int Num() const { return NumElements; }
     inline int Max() const { return MaxElements; }
@@ -53,7 +53,7 @@ public:
 
     inline bool Add(const T &element)
     {
-        if (Slack() <= 0) return false;
+        if (Slack() < 1) return false;
 
         Data[NumElements] = element;
         NumElements++;
@@ -68,7 +68,7 @@ public:
 
         for (int index = i; index < NumElements; index++)
         {
-            Data[i] = Data[i + 1];
+            Data[index] = Data[index + 1];
         }
 
         return true;
@@ -77,7 +77,7 @@ public:
     inline void Clear()
     {
         NumElements = 0;
-        if (!Data) memset(Data, 0, NumElements * MaxElements);
+        if (Data) memset(Data, 0, sizeof(T) * MaxElements);
     }
 };
 
