@@ -1,0 +1,52 @@
+name: Build iOS Tweak (Theos)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    name: Build Theos Tweak
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Cache Theos
+        uses: actions/cache@v4
+        with:
+          path: /opt/theos
+          key: theos-${{ runner.os }}-v1
+
+      - name: Install Dependencies
+        run: |
+          brew install perl ldid dpkg
+          echo "export THEOS=/opt/theos" >> $GITHUB_ENV
+          echo "export PATH=$THEOS/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Setup Theos (only if not cached)
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          git clone --recursive https://github.com/theos/theos.git /opt/theos
+          git clone https://github.com/theos/sdks.git /opt/theos/sdks
+          mkdir -p /opt/theos/vendor
+          git clone https://github.com/theos/libbootstrap.git /opt/theos/vendor/libbootstrap
+          git clone https://github.com/theos/libplist.git /opt/theos/vendor/libplist
+          git clone https://github.com/theos/liblog.git /opt/theos/vendor/liblog
+          git clone https://github.com/theos/libkrw.git /opt/theos/vendor/libkrw
+          git clone https://github.com/theos/libsymbolicate.git /opt/theos/vendor/libsymbolicate
+
+      - name: Build Tweak
+        run: |
+          make clean
+          make package FINALPACKAGE=1
+
+      - name: Upload .deb Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: theos-tweak-package
+          path: ./*.deb
