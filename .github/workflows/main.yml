@@ -34,7 +34,6 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
           git clone --recursive https://github.com/theos/theos.git "$THEOS"
-          git clone https://github.com/theos/sdks.git "$THEOS/sdks"
           mkdir -p "$THEOS/vendor"
           git clone https://github.com/theos/libbootstrap.git "$THEOS/vendor/libbootstrap"
           git clone https://github.com/theos/libplist.git "$THEOS/vendor/libplist"
