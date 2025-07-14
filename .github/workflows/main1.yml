@@ -19,7 +19,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Cache Theos
+      - name: Cache Theos (for faster builds)
         uses: actions/cache@v4
         with:
           path: ${{ env.THEOS }}
@@ -30,25 +30,16 @@ jobs:
           brew install perl ldid dpkg
           echo "export PATH=$THEOS/bin:$PATH" >> $GITHUB_ENV
 
-      - name: Setup Theos (if not cached)
-        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Setup Theos and SDKs (skip if cached)
         run: |
-          git clone --recursive https://github.com/theos/theos.git "$THEOS"
-          git clone https://github.com/theos/sdks.git "$THEOS/sdks"
-          mkdir -p "$THEOS/vendor"
-          git clone https://github.com/theos/libbootstrap.git "$THEOS/vendor/libbootstrap"
-          git clone https://github.com/theos/libplist.git "$THEOS/vendor/libplist"
-          git clone https://github.com/theos/liblog.git "$THEOS/vendor/liblog"
-          git clone https://github.com/theos/libkrw.git "$THEOS/vendor/libkrw"
-          git clone https://github.com/theos/libsymbolicate.git "$THEOS/vendor/libsymbolicate"
+          mkdir -p "$THEOS"
+          
+          if [ ! -d "$THEOS/.git" ]; then
+            echo "Cloning Theos..."
+            git clone --recursive https://github.com/theos/theos.git "$THEOS"
+          fi
 
-      - name: Build Tweak
-        run: |
-          make clean
-          make package
-
-      - name: Upload .deb Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: theos-tweak-package
-          path: ./*.deb
+          if [ ! -d "$THEOS/sdks" ]; then
+            echo "Cloning SDKs..."
+            git clone https://github.com/theos/sdks.git "$THEOS/sdks"
+          fi
