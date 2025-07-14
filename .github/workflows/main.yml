@@ -16,20 +16,15 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Cache Theos
-        uses: actions/cache@v4
-        with:
-          path: /opt/theos
-          key: theos-${{ runner.os }}-v1
-
       - name: Install Dependencies
         run: |
           brew install perl ldid dpkg
+          brew tap theos/theos
+          brew install theos
           echo "export THEOS=/opt/theos" >> $GITHUB_ENV
           echo "export PATH=$THEOS/bin:$PATH" >> $GITHUB_ENV
 
-      - name: Setup Theos (only if not cached)
-        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Clone Theos
         run: |
           git clone --recursive https://github.com/theos/theos.git /opt/theos
           git clone https://github.com/theos/sdks.git /opt/theos/sdks
@@ -39,6 +34,10 @@ jobs:
           git clone https://github.com/theos/liblog.git /opt/theos/vendor/liblog
           git clone https://github.com/theos/libkrw.git /opt/theos/vendor/libkrw
           git clone https://github.com/theos/libsymbolicate.git /opt/theos/vendor/libsymbolicate
+
+      - name: Set SDK Version
+        run: |
+          echo "export SDKVERSION=14.5" >> $GITHUB_ENV
 
       - name: Build Tweak
         run: |
