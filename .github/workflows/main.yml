@@ -7,6 +7,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+env:
+  THEOS: $HOME/theos
+
 jobs:
   build:
     runs-on: macos-latest
@@ -16,28 +19,28 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Cache Theos
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.THEOS }}
+          key: theos-${{ runner.os }}-v1
+
       - name: Install Dependencies
         run: |
           brew install perl ldid dpkg
-          brew tap theos/theos
-          brew install theos
-          echo "export THEOS=/opt/theos" >> $GITHUB_ENV
           echo "export PATH=$THEOS/bin:$PATH" >> $GITHUB_ENV
 
-      - name: Clone Theos
+      - name: Setup Theos (if not cached)
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          git clone --recursive https://github.com/theos/theos.git /opt/theos
-          git clone https://github.com/theos/sdks.git /opt/theos/sdks
-          mkdir -p /opt/theos/vendor
-          git clone https://github.com/theos/libbootstrap.git /opt/theos/vendor/libbootstrap
-          git clone https://github.com/theos/libplist.git /opt/theos/vendor/libplist
-          git clone https://github.com/theos/liblog.git /opt/theos/vendor/liblog
-          git clone https://github.com/theos/libkrw.git /opt/theos/vendor/libkrw
-          git clone https://github.com/theos/libsymbolicate.git /opt/theos/vendor/libsymbolicate
-
-      - name: Set SDK Version
-        run: |
-          echo "export SDKVERSION=14.5" >> $GITHUB_ENV
+          git clone --recursive https://github.com/theos/theos.git "$THEOS"
+          git clone https://github.com/theos/sdks.git "$THEOS/sdks"
+          mkdir -p "$THEOS/vendor"
+          git clone https://github.com/theos/libbootstrap.git "$THEOS/vendor/libbootstrap"
+          git clone https://github.com/theos/libplist.git "$THEOS/vendor/libplist"
+          git clone https://github.com/theos/liblog.git "$THEOS/vendor/liblog"
+          git clone https://github.com/theos/libkrw.git "$THEOS/vendor/libkrw"
+          git clone https://github.com/theos/libsymbolicate.git "$THEOS/vendor/libsymbolicate"
 
       - name: Build Tweak
         run: |
